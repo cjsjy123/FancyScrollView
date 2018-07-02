@@ -5,9 +5,32 @@ using UnityEngine.UI;
 
 namespace FancyScrollView
 {
-    [RequireComponent(typeof(BaseFancyScrollView))]
-    public class ScrollPositionController : UIBehaviour
+    [Serializable]
+    public abstract class ScrollController:ScriptableObject
     {
+        public Transform transform { get; set; }
+
+        public abstract void OnEnable();
+
+        public abstract void OnDisable();
+
+        public abstract void Update();
+
+        public abstract void OnUpdatePosition(Action<float> onUpdatePosition);
+
+        public abstract void OnItemSelected(Action<int> onItemSelected);
+
+        public abstract int GetDataCount();
+
+        public abstract void SetDataCount(int dataCont);
+
+        public abstract void ScrollTo(int index, float duration);
+    }
+
+
+    public class ScrollPositionController : ScrollController
+    {
+
         [Serializable]
         struct Snap
         {
@@ -46,6 +69,8 @@ namespace FancyScrollView
         [SerializeField]
         int dataCount;
 
+        public Transform transform { get; set; }
+
         Action<float> onUpdatePosition;
         Action<int> onItemSelected;
 
@@ -56,15 +81,13 @@ namespace FancyScrollView
         protected bool hasEvents;
         protected UILisenter listener;
 
-        protected override void OnEnable()
+        public override void OnEnable()
         {
-            base.OnEnable();
             AddEvents();
         }
 
-        protected override void OnDisable()
+        public override void OnDisable()
         {
-            base.OnDisable();
             RemoveEvents();
         }
 
@@ -76,9 +99,9 @@ namespace FancyScrollView
 
                 if(listener == null)
                 {
-                    listener = GetComponent<UILisenter>();
+                    listener =transform.GetComponent<UILisenter>();
                     if (listener == null)
-                        listener = gameObject.AddComponent<UILisenter>();
+                        listener = transform.gameObject.AddComponent<UILisenter>();
                 }
 
                 listener.onBeginDrag.Add(OnBeginDrag);
@@ -224,22 +247,22 @@ namespace FancyScrollView
             return (1 - (1 / ((Mathf.Abs(overStretching) * 0.55f / viewSize) + 1))) * viewSize * Mathf.Sign(overStretching);
         }
 
-        public void OnUpdatePosition(Action<float> onUpdatePosition)
+        public override void OnUpdatePosition(Action<float> onUpdatePosition)
         {
             this.onUpdatePosition = onUpdatePosition;
         }
 
-        public void OnItemSelected(Action<int> onItemSelected)
+        public override void OnItemSelected(Action<int> onItemSelected)
         {
             this.onItemSelected = onItemSelected;
         }
 
-        public int GetDataCount()
+        public override  int GetDataCount()
         {
             return dataCount;
         }
 
-        public void SetDataCount(int dataCont)
+        public override void SetDataCount(int dataCont)
         {
             this.dataCount = dataCont;
         }
@@ -257,7 +280,7 @@ namespace FancyScrollView
 
         readonly AutoScrollState autoScrollState = new AutoScrollState();
 
-        protected virtual void Update()
+        public override void Update()
         {
             var deltaTime = Time.unscaledDeltaTime;
             var offset = CalculateOffset(currentScrollPosition);
@@ -326,7 +349,7 @@ namespace FancyScrollView
             }
         }
 
-        public void ScrollTo(int index, float duration)
+        public override void ScrollTo(int index, float duration)
         {
             velocity = 0;
             dragStartScrollPosition = currentScrollPosition;

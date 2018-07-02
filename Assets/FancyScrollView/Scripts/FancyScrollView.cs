@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace FancyScrollView
 {
@@ -10,7 +12,8 @@ namespace FancyScrollView
         FilePathWithoutExtension,
     }
 
-    public abstract class BaseFancyScrollView:MonoBehaviour
+
+    public abstract class BaseFancyScrollView:UIBehaviour
     {
         [SerializeField]
         protected FancyScrollViewResName ResNameMode;
@@ -24,6 +27,21 @@ namespace FancyScrollView
         protected string cellBase;
         [SerializeField]
         protected Transform cellContainer;
+        [SerializeField]
+        protected ScrollController _controller;
+
+        public ScrollController controller
+        {
+            get
+            {
+                if (_controller == null)
+                {
+                    _controller = ScriptableObject.CreateInstance<ScrollPositionController>();
+                    _controller.transform = transform;
+                }
+                return _controller;
+            }
+        }
 
         public abstract void RefreshCells();
     }
@@ -36,7 +54,6 @@ namespace FancyScrollView
         protected TContext context;
         protected List<TData> cellData = ListPool<TData>.Get();
         private bool willquit;
-
         private static GameObjectPool<string> _pool;
         /// <summary>
         /// you can inherit this and set createfunc for your key
@@ -69,8 +86,9 @@ namespace FancyScrollView
             willquit = true;
         }
 
-        protected void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             ListPool<FancyScrollViewCell<TData, TContext>>.Release(cells);
  
             ListPool<TData>.Release(cellData);
@@ -85,6 +103,31 @@ namespace FancyScrollView
                 }
             }
         }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+        }
+
+        public void Register(ScrollController scrollcomponent)
+        {
+            if(scrollcomponent != null)
+            {
+                _controller = scrollcomponent;
+                _controller.transform = transform;
+            }
+        }
+
+        protected virtual void Update()
+        {
+            _controller.Update();
+        }
+
 
         /// <summary>
         /// コンテキストを設定します

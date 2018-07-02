@@ -9,9 +9,7 @@ using System;
 
 namespace FancyScrollView
 {
-    [CustomEditor(typeof(ScrollPositionController))]
-    [CanEditMultipleObjects]
-    public class ScrollPositionControllerEditor : Editor
+    public class ScrollPositionControllerEditor 
     {
         private SerializedProperty viewport;
         private SerializedProperty directionOfRecognize;
@@ -28,7 +26,7 @@ namespace FancyScrollView
         private FieldInfo field;
         private IList list;
 
-        private void OnEnable()
+        public void OnEnable( SerializedObject serializedObject)
         {
             viewport = serializedObject.FindProperty("viewport");
             directionOfRecognize = serializedObject.FindProperty("directionOfRecognize");
@@ -43,7 +41,7 @@ namespace FancyScrollView
             dataCount = serializedObject.FindProperty("dataCount");
         }
 
-        public override void OnInspectorGUI()
+        public  void OnInspectorGUI(UnityEngine.Object target, SerializedObject serializedObject)
         {
             serializedObject.Update();
             EditorGUILayout.PropertyField(viewport);
@@ -62,8 +60,8 @@ namespace FancyScrollView
 
             if (Application.isPlaying && GUILayout.Button("Sure"))
             {
-                ScrollPositionController controller = target as ScrollPositionController;
-                BaseFancyScrollView view = controller.GetComponent<BaseFancyScrollView>();
+                BaseFancyScrollView view = target as BaseFancyScrollView;
+                ScrollPositionController controller = view.controller as ScrollPositionController;
 
                 controller.SetDataCount(newvalue);
 

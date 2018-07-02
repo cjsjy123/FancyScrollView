@@ -17,7 +17,9 @@ namespace FancyScrollView
         protected SerializedProperty cellBase;
         protected SerializedProperty cellContainer;
         protected SerializedProperty ResNameMode;
+        private SerializedObject childController;
 
+        ScrollPositionControllerEditor controllerEditor;
         private GameObject cellRes;
 
         void OnEnable()
@@ -29,19 +31,42 @@ namespace FancyScrollView
             loop = serializedObject.FindProperty("loop");
             cellBase = serializedObject.FindProperty("cellBase");
             cellContainer = serializedObject.FindProperty("cellContainer");
+
+            BaseFancyScrollView view = target as BaseFancyScrollView;
+            controllerEditor = new ScrollPositionControllerEditor();
+            childController = new SerializedObject(view.controller);
+            controllerEditor.OnEnable(childController);
+
         }
 
         public override void OnInspectorGUI()
         {
             EditorGUILayout.PropertyField(script);
             serializedObject.Update();
+
+            GUILayout.Space(1);
+            GUILayout.Label("Fancy Cell Attributes",GUILayout.Width(200));
+            GUILayout.Space(1);
+            EditorGUILayout.BeginVertical("window");
             EditorGUILayout.PropertyField(ResNameMode);
             EditorGUILayout.Slider(cellInterval,float.Epsilon,1f);
             EditorGUILayout.Slider(cellOffset,0, 1f);
 
             EditorGUILayout.PropertyField(loop);
             EditorGUILayout.PropertyField(cellContainer);
+
             ShowCellBase();
+            EditorGUILayout.EndVertical();
+
+            if(controllerEditor != null && childController != null)
+            {
+                GUILayout.Space(2);
+                EditorGUILayout.BeginVertical("window");
+                controllerEditor.OnInspectorGUI(target, childController);
+                EditorGUILayout.EndVertical();
+
+                childController.ApplyModifiedProperties();
+            }
 
             serializedObject.ApplyModifiedProperties();
         }
